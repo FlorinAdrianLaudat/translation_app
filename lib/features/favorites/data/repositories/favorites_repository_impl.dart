@@ -21,10 +21,10 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
     }
   }
 
-  Future<Either<Failure, void>> addFavoriteTranslation(
+  Future<Either<Failure, void>> updateFavoriteTranslation(
       FavoritesEntity favorites) async {
     try {
-      return Right(dataSource.addFavoriteTranslation(favorites));
+      return Right(dataSource.updateFavoriteTranslation(favorites));
     } on Exception {
       return Left(LocalCacheFailure());
     }

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:translation_app/resources/strings/string_keys.dart';
+import '../../../favorites/domain/entity/favorite_text_entry_entity.dart';
 
 import '../../../../core/injection_container.dart';
+import '../../../../resources/strings/string_keys.dart';
 import '../../domain/entity/language_item_entity.dart';
 import '../bloc/translate_bloc.dart';
 
 class TranslatePage extends StatefulWidget {
+  /// list of displayed languages.
+  final List<LanguageItemEntity> languages;
+
+  TranslatePage({required this.languages});
+
   @override
   _TranslatePageState createState() => _TranslatePageState();
 }
@@ -14,28 +20,18 @@ class TranslatePage extends StatefulWidget {
 class _TranslatePageState extends State<TranslatePage> {
   final _languageTextController = TextEditingController(text: StringKeys.hello);
   late TranslateBloc _bloc;
-  // list of displayed languages.
-  List<LanguageItemEntity> _languages = [];
-  // selected language from
-  LanguageItemEntity _languageFrom = LanguageItemEntity(
-      languageCode: StringKeys.detect, languageName: StringKeys.detect);
   int _selectedLanguageFromValue = 0;
-  // selected language to
-  LanguageItemEntity _languageTo = LanguageItemEntity(
-      languageCode: StringKeys.detect, languageName: StringKeys.detect);
-  //LanguageItemEntity(languageCode: 'cs', languageName: 'Czech');
   int _selectedLanguageToValue = 0;
   // the result of the translatation
-  late String _result = '';
+  late String _result = 'test';
   // any detected language
   String _detectedLanguage = 'English';
-  // if the text and the translated one are marked as favorites or not.
+  // if the text translation is marked as favorites or not.
   bool isFavorite = false;
 
   @override
   void initState() {
     _bloc = di<TranslateBloc>();
-    _bloc.add(GetAvailableLanguagesEvent());
     _bloc.add(GetLastLanguageSetEvent());
     super.initState();
   }
@@ -51,32 +47,36 @@ class _TranslatePageState extends State<TranslatePage> {
     return BlocConsumer(
       bloc: _bloc,
       listener: (context, state) async {
-        if (state is LanguageListLoadedState) {
-          _languages = state.languages;
-        } else if (state is LanguageSetState) {
-          _languageFrom = state.languageFrom;
-          _languageTo = state.languageTo;
-          _selectedLanguageFromValue = _languages.indexOf(_languageFrom);
-          _selectedLanguageToValue = _languages.indexOf(_languageTo);
+        if (state is LanguageSetState) {
+          _selectedLanguageFromValue = state.languageFrom;
+          _selectedLanguageToValue = state.languageTo;
         }
       },
       builder: (context, state) {
         return SingleChildScrollView(
           child: Container(
-            color: Colors.white12,
-            padding: EdgeInsets.symmetric(horizontal: 10.0),
-            child: Column(
-              children: [
-                _inputGroup(),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Text(
-                    StringKeys.translations,
-                    style: TextStyle(color: Colors.grey, fontSize: 18),
+            color: Color(0xffebebeb),
+            padding: EdgeInsets.all(10),
+            child: GestureDetector(
+              onTap: () {
+                FocusScope.of(context).unfocus();
+              },
+              child: Column(
+                children: [
+                  _inputGroup(),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      StringKeys.translations,
+                      style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold),
+                    ),
                   ),
-                ),
-                _translations(),
-              ],
+                  _translations(),
+                ],
+              ),
             ),
           ),
         );
@@ -86,89 +86,172 @@ class _TranslatePageState extends State<TranslatePage> {
 
   _inputGroup() {
     return Container(
-      padding: EdgeInsets.only(top: 20),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              DropdownButton(
-                items: _languages.map((LanguageItemEntity item) {
-                  return DropdownMenuItem(
-                    value: _languages.indexOf(item),
-                    child: Text(
-                      item.languageName,
-                    ),
-                  );
-                }).toList(),
-                value: _selectedLanguageFromValue,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedLanguageFromValue = value as int;
-                  });
-                },
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10),
-                child:
-                    IconButton(icon: Icon(Icons.swap_horiz), onPressed: () {}),
-              ),
-              // DropdownButton(
-              //   items: _languages.map((LanguageItemEntity item) {
-              //     return DropdownMenuItem(
-              //       value: _languages.indexOf(item),
-              //       child: Text(
-              //         item.languageName,
-              //       ),
-              //     );
-              //   }).toList(),
-              //   value: _selectedLanguageToValue,
-              //   onChanged: (value) {
-              //     setState(() {
-              //       _selectedLanguageToValue = value as int;
-              //     });
-              //   },
-              // ),
-            ],
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(
+            Radius.circular(6),
           ),
-          TextFormField(
-            decoration: InputDecoration(),
-            onSaved: (String? value) {},
-            maxLines: null,
-            controller: _languageTextController,
-          )
-        ],
+          boxShadow: [
+            BoxShadow(color: Colors.grey, offset: Offset(0, 2.0)),
+          ]),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                DropdownButton(
+                  items: widget.languages.map((LanguageItemEntity item) {
+                    return DropdownMenuItem(
+                      value: widget.languages.indexOf(item),
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.3,
+                        child: Text(
+                          item.languageName,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  value: _selectedLanguageFromValue,
+                  onChanged: (value) {
+                    setState(() {
+                      if (value == _selectedLanguageToValue + 1) {
+                        // additional check for Detect language - cannot set to languageTo
+                        if (_selectedLanguageFromValue == 0) {
+                          // set a default english or czech value
+                          // TODO
+                          _selectedLanguageToValue = 3;
+                        } else {
+                          _selectedLanguageToValue =
+                              _selectedLanguageFromValue - 1;
+                        }
+                      }
+                      _selectedLanguageFromValue = value as int;
+                    });
+                    _bloc.add(ChangeLanguageEvent(
+                        isLanguageFrom: true,
+                        languageIndex: _selectedLanguageFromValue));
+                  },
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  child: IconButton(
+                    icon: Icon(Icons.swap_horiz),
+                    onPressed: _selectedLanguageFromValue != 0
+                        ? () {
+                            setState(() {
+                              final i = _selectedLanguageFromValue - 1;
+                              _selectedLanguageFromValue =
+                                  _selectedLanguageToValue + 1;
+                              _selectedLanguageToValue = i;
+                            });
+                          }
+                        : null,
+                    disabledColor: Colors.grey,
+                  ),
+                ),
+                DropdownButton(
+                  items: (widget.languages.length > 0
+                          ? widget.languages.sublist(1)
+                          : widget.languages)
+                      .map((LanguageItemEntity item) {
+                    return DropdownMenuItem(
+                      value: widget.languages.sublist(1).indexOf(item),
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.3,
+                        child: Text(
+                          item.languageName,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  value: _selectedLanguageToValue,
+                  onChanged: (value) {
+                    setState(() {
+                      if (value == _selectedLanguageFromValue - 1) {
+                        _selectedLanguageFromValue =
+                            _selectedLanguageToValue + 1;
+                      }
+                      _selectedLanguageToValue = value as int;
+                    });
+                    _bloc.add(ChangeLanguageEvent(
+                        isLanguageFrom: false,
+                        languageIndex: _selectedLanguageToValue));
+                  },
+                ),
+              ],
+            ),
+            TextFormField(
+              decoration: InputDecoration(),
+              onSaved: (String? value) {},
+              maxLines: null,
+              maxLength: 5000,
+              controller: _languageTextController,
+              onChanged: (value) {
+                setState(() {
+                  isFavorite = false;
+                });
+              },
+            )
+          ],
+        ),
       ),
     );
   }
 
   _translations() {
     return Container(
-      foregroundDecoration: BoxDecoration(color: Colors.white70),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              children: [
-                Text(_languageTextController.text),
-                Text(
-                  _result,
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Visibility(
-                  visible: _languageFrom.languageName == StringKeys.detect,
-                  child: Text(StringKeys.detectedLanguage + _detectedLanguage),
-                )
-              ],
-            ),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(
+            Radius.circular(6),
           ),
-          IconButton(
-              icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_outline),
-              onPressed: () {
-                setState(() {
-                  isFavorite = !isFavorite;
-                });
-              }),
-        ],
+          boxShadow: [
+            BoxShadow(color: Colors.grey, offset: Offset(0, 2.0)),
+          ]),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_languageTextController.text),
+                  SizedBox(height: 10),
+                  Text(
+                    _result,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 10),
+                  Visibility(
+                    visible: _selectedLanguageFromValue == 0,
+                    child: Text(StringKeys.detectedLanguage + _detectedLanguage,
+                        style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+                icon:
+                    Icon(isFavorite ? Icons.favorite : Icons.favorite_outline),
+                onPressed: () {
+                  if (!isFavorite) {
+                    setState(() {
+                      isFavorite = true;
+                    });
+                    _bloc.add(
+                      UpdateFavoritesEvent(
+                        entry: FavoriteTextEntryEntity(
+                            textToBeTranslated: _languageTextController.text,
+                            translatedText: _result),
+                      ),
+                    );
+                  }
+                }),
+          ],
+        ),
       ),
     );
   }

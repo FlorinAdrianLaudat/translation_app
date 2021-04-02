@@ -5,6 +5,6 @@ import '../entity/favorites_entity.dart';
 
 abstract class FavoritesRepository {
   Future<Either<Failure, FavoritesEntity>> getFavoriteTranslations();
-  Future<Either<Failure, void>> addFavoriteTranslation(
+  Future<Either<Failure, void>> updateFavoriteTranslation(
       FavoritesEntity favorites);
 }

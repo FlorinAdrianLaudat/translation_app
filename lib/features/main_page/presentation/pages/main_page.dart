@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:translation_app/resources/strings/string_keys.dart';
 
 import '../../../../core/constants/constants.dart';
 import '../../../../core/injection_container.dart';
+import '../../../../resources/strings/string_keys.dart';
 import '../../../favorites/presentation/pages/favorites_page.dart';
+import '../../../translate/domain/entity/language_item_entity.dart';
 import '../../../translate/presentation/pages/translate_page.dart';
 import '../../data/view_logic/item_bottom_navigation_bar.dart';
 import '../../data/view_logic/navigation_bar_list.dart';
-import '../bloc/navigation_bloc.dart';
+import '../bloc/main_bloc.dart';
 
 class MainPage extends StatefulWidget {
   @override
@@ -16,20 +17,27 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  late NavigationBloc _navigationBloc;
+  late MainBloc _navigationBloc;
 
   final PageController _pageController = PageController();
 
   int _selectedBottomIndex = 0;
   final List<ItemBottomNavigationBar> _bottomMenuList =
       NavigationBarList.createNavigationBarListItem();
+  // list of displayed languages.
+  List<LanguageItemEntity> _languages = [];
 
+  @override
   void initState() {
-    _navigationBloc = di<NavigationBloc>();
+    _navigationBloc = di<MainBloc>();
+    _navigationBloc.add(GetAvailableLanguagesEvent());
+    _navigationBloc.add(InitPreferredLanguageEvent());
+    _navigationBloc.add(GetFavoritesEvent());
     super.initState();
   }
 
-  dispose() {
+  @override
+  void dispose() {
     _navigationBloc.close();
     super.dispose();
   }
@@ -53,6 +61,8 @@ class _MainPageState extends State<MainPage> {
               _goToPage(Constants.TRANSLATE_PAGE_INDEX);
             } else if (state is FavoritesPageState) {
               _goToPage(Constants.FAVORITE_PAGE_INDEX);
+            } else if (state is LanguageListLoadedState) {
+              _languages = state.languages;
             }
           },
           builder: (context, state) {
@@ -60,7 +70,7 @@ class _MainPageState extends State<MainPage> {
               controller: _pageController,
               physics: NeverScrollableScrollPhysics(),
               children: [
-                TranslatePage(),
+                TranslatePage(languages: _languages),
                 FavoritesPage(),
               ],
             );

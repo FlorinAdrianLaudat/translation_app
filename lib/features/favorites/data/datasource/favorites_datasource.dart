@@ -9,10 +9,16 @@ class FavoritesLocalDataSource {
 
   Future<FavoritesEntity> getFavoriteTranslations() async {
     var box = await hive.openBox(StringKeys.favoriteBoxName);
-    return box.get(StringKeys.favoriteKeys);
+    var result = await box.get(StringKeys.favoriteKeys);
+    // check if no result was previously stored in db
+    if (result == null) {
+      box.put(StringKeys.favoriteKeys, FavoritesEntity(items: []));
+      return FavoritesEntity(items: []);
+    }
+    return result;
   }
 
-  Future<void> addFavoriteTranslation(FavoritesEntity favorites) async {
+  Future<void> updateFavoriteTranslation(FavoritesEntity favorites) async {
     var box = await hive.openBox(StringKeys.favoriteBoxName);
     return box.put(StringKeys.favoriteKeys, favorites);
   }
