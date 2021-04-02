@@ -74,8 +74,8 @@ class _MainPageState extends State<MainPage> {
           _onBottomNavigationBarIconPressed(index);
         },
         currentIndex: _selectedBottomIndex,
-        selectedFontSize: 23,
-        unselectedFontSize: 20,
+        selectedFontSize: 20,
+        unselectedFontSize: 18,
         selectedItemColor: Colors.blue,
       ),
     );
