@@ -8,10 +8,15 @@ import '../features/favorites/domain/usecase/get_favorites.dart';
 import '../features/favorites/domain/usecase/update_favorite.dart';
 import '../features/favorites/presentation/bloc/favorites_bloc.dart';
 import '../features/main_page/presentation/bloc/main_bloc.dart';
+import '../features/translate/data/datasource/detect_language_datasource.dart';
 import '../features/translate/data/datasource/translate_datasource.dart';
+import '../features/translate/data/repository/detect_language_repository_impl.dart';
 import '../features/translate/data/repository/translate_repository_impl.dart';
+import '../features/translate/domain/repository/detect_language_repository.dart';
 import '../features/translate/domain/repository/translate_repository.dart';
+import '../features/translate/domain/usecase/detect_language_usecase.dart';
 import '../features/translate/domain/usecase/get_languages_usecase.dart';
+import '../features/translate/domain/usecase/translate_usecase.dart';
 import '../features/translate/presentation/bloc/translate_bloc.dart';
 import '../resources/network/network_constants.dart';
 import 'db/hive_db_wrapper.dart';
@@ -26,11 +31,23 @@ Future<void> init() async {
       languagesUseCase: di(), sharedPreferences: di(), getFavorites: di()));
   /*---------------Translate--------------------*/
   di.registerFactory(() => TranslateDataSource());
+  di.registerFactory(() => DetectLanguageDataSource());
   di.registerFactory<TranslateRepository>(
       () => TranslateRepositoryImpl(dataSource: di(), repository: di()));
+  di.registerFactory<DetectLanguageRepository>(
+      () => DetectLanguageRepositoryImpl(dataSource: di(), repository: di()));
   di.registerFactory(() => GetLanguagesUseCase(repository: di()));
-  di.registerFactory(() => TranslateBloc(
-      languagesUseCase: di(), sharedPreferences: di(), updateFavorite: di()));
+  di.registerFactory(() => DetectLanguageUseCase(repository: di()));
+  di.registerFactory(() => TranslateUseCase(repository: di()));
+  di.registerFactory(
+    () => TranslateBloc(
+      languagesUseCase: di(),
+      sharedPreferences: di(),
+      updateFavorite: di(),
+      detectLanguageUseCase: di(),
+      translateUseCase: di(),
+    ),
+  );
   /*---------------Favorites--------------------*/
   di.registerFactory(() => FavoritesLocalDataSource(hive: di()));
   di.registerFactory<FavoritesRepository>(

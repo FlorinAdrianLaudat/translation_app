@@ -106,7 +106,7 @@ class _TranslatePageState extends State<TranslatePage> {
                     return DropdownMenuItem(
                       value: widget.languages.indexOf(item),
                       child: SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.3,
+                        width: MediaQuery.of(context).size.width * 0.29,
                         child: Text(
                           item.languageName,
                         ),
@@ -159,7 +159,7 @@ class _TranslatePageState extends State<TranslatePage> {
                     return DropdownMenuItem(
                       value: widget.languages.sublist(1).indexOf(item),
                       child: SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.3,
+                        width: MediaQuery.of(context).size.width * 0.29,
                         child: Text(
                           item.languageName,
                         ),

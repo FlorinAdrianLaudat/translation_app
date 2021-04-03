@@ -1,4 +1,6 @@
 import 'package:dartz/dartz.dart';
+import 'package:translation_app/features/translate/domain/entity/translate_list_entity.dart';
+import 'package:translation_app/features/translate/domain/usecase/translate_params.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/repository/repository.dart';
@@ -17,6 +19,14 @@ class TranslateRepositoryImpl extends TranslateRepository {
   Future<Either<Failure, LanguageListEntity>> getLanguageList(NoParams params) {
     return repository.call<LanguageListEntity>(
       () => dataSource.getLanguageList(params),
+    );
+  }
+
+  @override
+  Future<Either<Failure, TranslateListEntity>> getTranslation(
+      TranslateParams params) {
+    return repository.call<TranslateListEntity>(
+      () => dataSource.getTranslation(params),
     );
   }
 }

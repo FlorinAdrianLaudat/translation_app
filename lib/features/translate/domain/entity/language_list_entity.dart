@@ -7,5 +7,5 @@ class LanguageListEntity extends Equatable {
   LanguageListEntity({required this.languages});
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [languages];
 }

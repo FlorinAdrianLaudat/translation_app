@@ -11,6 +11,8 @@ class InitState extends TranslateState {}
 
 class LoadingState extends TranslateState {}
 
+class ErrorState extends TranslateState {}
+
 class LanguageSetState extends TranslateState {
   final int languageFrom;
   final int languageTo;
@@ -22,3 +24,21 @@ class LanguageSetState extends TranslateState {
 }
 
 class LanguagesStoredState extends TranslateState {}
+
+class DetectedLanguageState extends TranslateState {
+  final String detectedLanguage;
+
+  DetectedLanguageState({required this.detectedLanguage});
+
+  @override
+  List<Object> get props => [detectedLanguage];
+}
+
+class TranslatedTextState extends TranslateState {
+  final String translatedText;
+
+  TranslatedTextState({required this.translatedText});
+
+  @override
+  List<Object> get props => [translatedText];
+}
