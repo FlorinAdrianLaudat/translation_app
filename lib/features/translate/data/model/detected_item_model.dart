@@ -13,8 +13,8 @@ class DetectedItemModel extends DetectedItemEntity {
 
   factory DetectedItemModel.fromJson(Map<String, dynamic> json) {
     return DetectedItemModel(
-      language: json["detected"],
-      confidence: json["name"],
+      language: json["language"],
+      confidence: json["confidence"],
       isReliable: json["isReliable"],
     );
   }

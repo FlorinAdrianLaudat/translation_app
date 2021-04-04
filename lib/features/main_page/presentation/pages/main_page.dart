@@ -47,7 +47,6 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        automaticallyImplyLeading: false,
         title: Text(
           StringKeys.appTitle,
           style: TextStyle(fontSize: 20),
@@ -66,13 +65,21 @@ class _MainPageState extends State<MainPage> {
             }
           },
           builder: (context, state) {
-            return PageView(
-              controller: _pageController,
-              physics: NeverScrollableScrollPhysics(),
-              children: [
-                TranslatePage(languages: _languages),
-                FavoritesPage(),
-              ],
+            return GestureDetector(
+              onTap: () {
+                FocusScope.of(context).unfocus();
+              },
+              child: Container(
+                color: Color(0xffebebeb),
+                child: PageView(
+                  controller: _pageController,
+                  physics: NeverScrollableScrollPhysics(),
+                  children: [
+                    TranslatePage(languages: _languages),
+                    FavoritesPage(),
+                  ],
+                ),
+              ),
             );
           },
         ),

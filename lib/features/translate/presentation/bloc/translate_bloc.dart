@@ -93,7 +93,9 @@ class TranslateBloc extends Bloc<TranslateEvent, TranslateState> {
     yield result.fold((failure) {
       return ErrorState();
     }, (detect) {
-      return DetectedLanguageState(detectedLanguage: detect.toString());
+      return DetectedLanguageState(
+          detectedLanguage: detect.detectedLanguage,
+          textToBeTranslated: inputText);
     });
   }
 

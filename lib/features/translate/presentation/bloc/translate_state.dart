@@ -27,11 +27,12 @@ class LanguagesStoredState extends TranslateState {}
 
 class DetectedLanguageState extends TranslateState {
   final String detectedLanguage;
-
-  DetectedLanguageState({required this.detectedLanguage});
+  final String textToBeTranslated;
+  DetectedLanguageState(
+      {required this.detectedLanguage, required this.textToBeTranslated});
 
   @override
-  List<Object> get props => [detectedLanguage];
+  List<Object> get props => [detectedLanguage, textToBeTranslated];
 }
 
 class TranslatedTextState extends TranslateState {

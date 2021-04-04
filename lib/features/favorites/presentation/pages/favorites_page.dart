@@ -47,7 +47,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   _buildFavoriteItem(int index, FavoriteTextEntryEntity entity) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 20),
+      padding: EdgeInsets.only(bottom: 10),
       child: Container(
         decoration: BoxDecoration(
             color: Colors.white,

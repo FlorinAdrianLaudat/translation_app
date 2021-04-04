@@ -18,14 +18,14 @@ class TranslatePage extends StatefulWidget {
 }
 
 class _TranslatePageState extends State<TranslatePage> {
-  final _languageTextController = TextEditingController(text: StringKeys.hello);
+  final _inputTextController = TextEditingController(text: '');
   late TranslateBloc _bloc;
   int _selectedLanguageFromValue = 0;
   int _selectedLanguageToValue = 0;
   // the result of the translatation
-  late String _result = 'test';
+  late String _result = '';
   // any detected language
-  String _detectedLanguage = 'English';
+  String _detectedLanguage = '';
   // if the text translation is marked as favorites or not.
   bool isFavorite = false;
 
@@ -39,6 +39,7 @@ class _TranslatePageState extends State<TranslatePage> {
   @override
   void dispose() {
     _bloc.close();
+    _inputTextController.dispose();
     super.dispose();
   }
 
@@ -50,6 +51,16 @@ class _TranslatePageState extends State<TranslatePage> {
         if (state is LanguageSetState) {
           _selectedLanguageFromValue = state.languageFrom;
           _selectedLanguageToValue = state.languageTo;
+        } else if (state is TranslatedTextState) {
+          _result = state.translatedText;
+        } else if (state is DetectedLanguageState) {
+          _detectedLanguage = state.detectedLanguage;
+          _bloc.add(TranslateTextEvent(
+              inputText: state.textToBeTranslated,
+              sourceLanguage: _detectedLanguage,
+              targetLanguage: widget.languages
+                  .elementAt(_selectedLanguageToValue + 1)
+                  .languageCode));
         }
       },
       builder: (context, state) {
@@ -57,26 +68,21 @@ class _TranslatePageState extends State<TranslatePage> {
           child: Container(
             color: Color(0xffebebeb),
             padding: EdgeInsets.all(10),
-            child: GestureDetector(
-              onTap: () {
-                FocusScope.of(context).unfocus();
-              },
-              child: Column(
-                children: [
-                  _inputGroup(),
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Text(
-                      StringKeys.translations,
-                      style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold),
-                    ),
+            child: Column(
+              children: [
+                _inputGroup(),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Text(
+                    StringKeys.translations,
+                    style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold),
                   ),
-                  _translations(),
-                ],
-              ),
+                ),
+                _translations(),
+              ],
             ),
           ),
         );
@@ -145,6 +151,17 @@ class _TranslatePageState extends State<TranslatePage> {
                               _selectedLanguageFromValue =
                                   _selectedLanguageToValue + 1;
                               _selectedLanguageToValue = i;
+                              // switch language - do the translation also.
+                              if (_inputTextController.text.isNotEmpty) {
+                                _bloc.add(TranslateTextEvent(
+                                    inputText: _inputTextController.text,
+                                    sourceLanguage: widget.languages
+                                        .elementAt(_selectedLanguageFromValue)
+                                        .languageCode,
+                                    targetLanguage: widget.languages
+                                        .elementAt(_selectedLanguageToValue + 1)
+                                        .languageCode));
+                              }
                             });
                           }
                         : null,
@@ -183,12 +200,50 @@ class _TranslatePageState extends State<TranslatePage> {
               ],
             ),
             TextFormField(
-              decoration: InputDecoration(),
-              onSaved: (String? value) {},
+              decoration: InputDecoration(
+                  hintText: StringKeys.addYourInputHere,
+                  suffixIcon: IconButton(
+                      icon: Icon(Icons.clear),
+                      disabledColor: Colors.grey,
+                      onPressed: _inputTextController.text.isNotEmpty
+                          ? () {
+                              setState(
+                                () {
+                                  _inputTextController.text = '';
+                                  _result = '';
+                                  _detectedLanguage = '';
+                                },
+                              );
+                            }
+                          : null)),
+              // onSaved: (String? value) {},
               maxLines: null,
               maxLength: 5000,
-              controller: _languageTextController,
+              controller: _inputTextController,
               onChanged: (value) {
+                if (_selectedLanguageFromValue == 0) {
+                  if (value.length < 10) {
+                    // detect language and do the translation
+                    _bloc.add(GetDetectedLanguageEvent(inputText: value));
+                  } else {
+                    // language is already detected - translate the text
+                    _bloc.add(TranslateTextEvent(
+                        inputText: value,
+                        sourceLanguage: _detectedLanguage,
+                        targetLanguage: widget.languages
+                            .elementAt(_selectedLanguageToValue + 1)
+                            .languageCode));
+                  }
+                } else {
+                  _bloc.add(TranslateTextEvent(
+                      inputText: value,
+                      sourceLanguage: widget.languages
+                          .elementAt(_selectedLanguageFromValue)
+                          .languageCode,
+                      targetLanguage: widget.languages
+                          .elementAt(_selectedLanguageToValue + 1)
+                          .languageCode));
+                }
                 setState(() {
                   isFavorite = false;
                 });
@@ -218,7 +273,7 @@ class _TranslatePageState extends State<TranslatePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_languageTextController.text),
+                  Text(_inputTextController.text),
                   SizedBox(height: 10),
                   Text(
                     _result,
@@ -226,7 +281,8 @@ class _TranslatePageState extends State<TranslatePage> {
                   ),
                   SizedBox(height: 10),
                   Visibility(
-                    visible: _selectedLanguageFromValue == 0,
+                    visible: _selectedLanguageFromValue == 0 &&
+                        _detectedLanguage.isNotEmpty,
                     child: Text(StringKeys.detectedLanguage + _detectedLanguage,
                         style: TextStyle(color: Colors.grey, fontSize: 12)),
                   ),
@@ -236,20 +292,22 @@ class _TranslatePageState extends State<TranslatePage> {
             IconButton(
                 icon:
                     Icon(isFavorite ? Icons.favorite : Icons.favorite_outline),
-                onPressed: () {
-                  if (!isFavorite) {
-                    setState(() {
-                      isFavorite = true;
-                    });
-                    _bloc.add(
-                      UpdateFavoritesEvent(
-                        entry: FavoriteTextEntryEntity(
-                            textToBeTranslated: _languageTextController.text,
-                            translatedText: _result),
-                      ),
-                    );
-                  }
-                }),
+                onPressed: _inputTextController.text.isNotEmpty
+                    ? () {
+                        if (!isFavorite) {
+                          setState(() {
+                            isFavorite = true;
+                          });
+                          _bloc.add(
+                            UpdateFavoritesEvent(
+                              entry: FavoriteTextEntryEntity(
+                                  textToBeTranslated: _inputTextController.text,
+                                  translatedText: _result),
+                            ),
+                          );
+                        }
+                      }
+                    : null),
           ],
         ),
       ),

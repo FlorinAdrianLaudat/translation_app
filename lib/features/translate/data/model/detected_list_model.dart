@@ -14,7 +14,7 @@ class DetectedListModel extends DetectedListEntity {
   }
 
   static _parseList(Map<String, dynamic> json) {
-    final detectedEntries = json["detections"];
+    final detectedEntries = json["detections"][0];
     List<DetectedItemModel> resultList = <DetectedItemModel>[];
     detectedEntries.forEach((lang) {
       resultList.add(DetectedItemModel.fromJson(lang));

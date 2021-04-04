@@ -5,7 +5,7 @@ class StringKeys {
   static const favoriteBoxName = "favorites";
   static const favoriteKeys = "favoriteKeys";
   static const translations = "Translations";
-  static const hello = "Hello there";
   static const detect = "Detect";
   static const detectedLanguage = "Detected language : ";
+  static const addYourInputHere = "Add your input here";
 }
