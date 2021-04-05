@@ -67,8 +67,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       sharedPreferences.setInt(SharedPreferencesKeys.LANGUAGE_FROM, 0);
     }
     if (sharedPreferences.get(SharedPreferencesKeys.LANGUAGE_TO) == null) {
-      // TODO
-      sharedPreferences.setInt(SharedPreferencesKeys.LANGUAGE_TO, 2);
+      sharedPreferences.setInt(SharedPreferencesKeys.LANGUAGE_TO, 19);
     }
     yield CompleteState();
   }

@@ -62,6 +62,10 @@ class _MainPageState extends State<MainPage> {
               _goToPage(Constants.FAVORITE_PAGE_INDEX);
             } else if (state is LanguageListLoadedState) {
               _languages = state.languages;
+            } else if (state is ErrorState) {
+              _showErrorDialog('Error getting the data');
+            } else if (state is NoNetworkState) {
+              _showErrorDialog('No network available');
             }
           },
           builder: (context, state) {
@@ -131,5 +135,24 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       _selectedBottomIndex = index;
     });
+  }
+
+  _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Close"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

@@ -13,6 +13,8 @@ class LoadingState extends TranslateState {}
 
 class ErrorState extends TranslateState {}
 
+class NoNetworkState extends TranslateState {}
+
 class LanguageSetState extends TranslateState {
   final int languageFrom;
   final int languageTo;
@@ -24,6 +26,8 @@ class LanguageSetState extends TranslateState {
 }
 
 class LanguagesStoredState extends TranslateState {}
+
+class UpdateFavoritesState extends TranslateState {}
 
 class DetectedLanguageState extends TranslateState {
   final String detectedLanguage;

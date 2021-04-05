@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../favorites/domain/entity/favorite_text_entry_entity.dart';
 
 import '../../../../core/injection_container.dart';
 import '../../../../resources/strings/string_keys.dart';
+import '../../../favorites/domain/entity/favorite_text_entry_entity.dart';
 import '../../domain/entity/language_item_entity.dart';
 import '../bloc/translate_bloc.dart';
 
@@ -61,6 +61,15 @@ class _TranslatePageState extends State<TranslatePage> {
               targetLanguage: widget.languages
                   .elementAt(_selectedLanguageToValue + 1)
                   .languageCode));
+        } else if (state is ErrorState) {
+          _showErrorDialog('Error getting the data');
+        } else if (state is NoNetworkState) {
+          _showErrorDialog('No network available');
+        } else if (state is LanguagesStoredState) {
+          // A language was change - automatically starts the translation of the existing text.
+          if (_inputTextController.text.isNotEmpty) {
+            _addTranslateEvent(_inputTextController.text);
+          }
         }
       },
       builder: (context, state) {
@@ -112,7 +121,7 @@ class _TranslatePageState extends State<TranslatePage> {
                     return DropdownMenuItem(
                       value: widget.languages.indexOf(item),
                       child: SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.29,
+                        width: MediaQuery.of(context).size.width * 0.27,
                         child: Text(
                           item.languageName,
                         ),
@@ -122,12 +131,16 @@ class _TranslatePageState extends State<TranslatePage> {
                   value: _selectedLanguageFromValue,
                   onChanged: (value) {
                     setState(() {
+                      // additional checks when the selected value is the same like the one from translate to.
                       if (value == _selectedLanguageToValue + 1) {
-                        // additional check for Detect language - cannot set to languageTo
                         if (_selectedLanguageFromValue == 0) {
+                          // Detect language - cannot be set to languageTo
                           // set a default english or czech value
-                          // TODO
-                          _selectedLanguageToValue = 3;
+                          if (_selectedLanguageToValue == 21) {
+                            _selectedLanguageToValue = 18;
+                          } else {
+                            _selectedLanguageToValue = 21;
+                          }
                         } else {
                           _selectedLanguageToValue =
                               _selectedLanguageFromValue - 1;
@@ -176,7 +189,7 @@ class _TranslatePageState extends State<TranslatePage> {
                     return DropdownMenuItem(
                       value: widget.languages.sublist(1).indexOf(item),
                       child: SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.29,
+                        width: MediaQuery.of(context).size.width * 0.27,
                         child: Text(
                           item.languageName,
                         ),
@@ -216,34 +229,11 @@ class _TranslatePageState extends State<TranslatePage> {
                               );
                             }
                           : null)),
-              // onSaved: (String? value) {},
               maxLines: null,
               maxLength: 5000,
               controller: _inputTextController,
               onChanged: (value) {
-                if (_selectedLanguageFromValue == 0) {
-                  if (value.length < 10) {
-                    // detect language and do the translation
-                    _bloc.add(GetDetectedLanguageEvent(inputText: value));
-                  } else {
-                    // language is already detected - translate the text
-                    _bloc.add(TranslateTextEvent(
-                        inputText: value,
-                        sourceLanguage: _detectedLanguage,
-                        targetLanguage: widget.languages
-                            .elementAt(_selectedLanguageToValue + 1)
-                            .languageCode));
-                  }
-                } else {
-                  _bloc.add(TranslateTextEvent(
-                      inputText: value,
-                      sourceLanguage: widget.languages
-                          .elementAt(_selectedLanguageFromValue)
-                          .languageCode,
-                      targetLanguage: widget.languages
-                          .elementAt(_selectedLanguageToValue + 1)
-                          .languageCode));
-                }
+                _addTranslateEvent(value);
                 setState(() {
                   isFavorite = false;
                 });
@@ -312,5 +302,50 @@ class _TranslatePageState extends State<TranslatePage> {
         ),
       ),
     );
+  }
+
+  _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Close"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  _addTranslateEvent(String inputText) {
+    if (_selectedLanguageFromValue == 0) {
+      if (inputText.length < 10) {
+        // detect language and do the translation
+        _bloc.add(GetDetectedLanguageEvent(inputText: inputText));
+      } else {
+        // language is already detected - translate the text
+        _bloc.add(TranslateTextEvent(
+            inputText: inputText,
+            sourceLanguage: _detectedLanguage,
+            targetLanguage: widget.languages
+                .elementAt(_selectedLanguageToValue + 1)
+                .languageCode));
+      }
+    } else {
+      _bloc.add(TranslateTextEvent(
+          inputText: inputText,
+          sourceLanguage: widget.languages
+              .elementAt(_selectedLanguageFromValue)
+              .languageCode,
+          targetLanguage: widget.languages
+              .elementAt(_selectedLanguageToValue + 1)
+              .languageCode));
+    }
   }
 }

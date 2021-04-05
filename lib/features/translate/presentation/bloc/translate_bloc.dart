@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/error/failures.dart';
 
 import '../../../../core/injection_container.dart';
 import '../../../../core/singleton/user_details.dart';
@@ -56,7 +57,7 @@ class TranslateBloc extends Bloc<TranslateEvent, TranslateState> {
     final languageTo = sharedPreferences.get(SharedPreferencesKeys.LANGUAGE_TO);
     if (languageFrom == null || languageTo == null) {
       // not yet initialise
-      yield LanguageSetState(languageFrom: 0, languageTo: 0);
+      yield LanguageSetState(languageFrom: 0, languageTo: 1);
     } else {
       yield LanguageSetState(
         languageFrom:
@@ -82,16 +83,24 @@ class TranslateBloc extends Bloc<TranslateEvent, TranslateState> {
       FavoriteTextEntryEntity entry) async* {
     yield LoadingState();
     di<UserDetails>().addFavorite(entry);
-    updateFavorite
+    final result = await updateFavorite
         .call(FavoritesEntity(items: di<UserDetails>().favorites.toList()));
-    yield LanguagesStoredState();
+    yield result.fold((failure) {
+      return ErrorState();
+    }, (language) {
+      return UpdateFavoritesState();
+    });
   }
 
   Stream<TranslateState> _detectLanguage(String inputText) async* {
     yield LoadingState();
     final result = await detectLanguageUseCase(inputText);
     yield result.fold((failure) {
-      return ErrorState();
+      if (failure is NetworkFailure) {
+        return NoNetworkState();
+      } else {
+        return ErrorState();
+      }
     }, (detect) {
       return DetectedLanguageState(
           detectedLanguage: detect.detectedLanguage,
@@ -107,7 +116,11 @@ class TranslateBloc extends Bloc<TranslateEvent, TranslateState> {
           inputText: inputText, source: sourceLanguage, target: targetLanguage),
     );
     yield result.fold((failure) {
-      return ErrorState();
+      if (failure is NetworkFailure) {
+        return NoNetworkState();
+      } else {
+        return ErrorState();
+      }
     }, (translatedList) {
       return TranslatedTextState(
           translatedText: translatedList.translations.first.translatedText);

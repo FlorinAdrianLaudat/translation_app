@@ -14,8 +14,16 @@ class DetectedItemModel extends DetectedItemEntity {
   factory DetectedItemModel.fromJson(Map<String, dynamic> json) {
     return DetectedItemModel(
       language: json["language"],
-      confidence: json["confidence"],
+      confidence: DetectedItemModel.getConfidence(json["confidence"]),
       isReliable: json["isReliable"],
     );
+  }
+
+  static double getConfidence(dynamic confidence) {
+    if (confidence is int) {
+      return confidence.toDouble();
+    } else {
+      return confidence;
+    }
   }
 }

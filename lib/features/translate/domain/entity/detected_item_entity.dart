@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 class DetectedItemEntity extends Equatable {
   final String language;
-  final int confidence;
+  final double confidence;
   final bool isReliable;
 
   DetectedItemEntity(
