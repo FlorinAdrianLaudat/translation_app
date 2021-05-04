@@ -111,6 +111,10 @@ class TranslateBloc extends Bloc<TranslateEvent, TranslateState> {
   Stream<TranslateState> _translateText(
       String inputText, String sourceLanguage, String targetLanguage) async* {
     yield LoadingState();
+    if (sourceLanguage == targetLanguage) {
+      yield TranslatedTextState(translatedText: inputText);
+      return;
+    }
     final result = await translateUseCase(
       TranslateParams(
           inputText: inputText, source: sourceLanguage, target: targetLanguage),
