@@ -324,28 +324,32 @@ class _TranslatePageState extends State<TranslatePage> {
   }
 
   _addTranslateEvent(String inputText) {
-    if (_selectedLanguageFromValue == 0) {
-      if (inputText.length < 10) {
-        // detect language and do the translation
-        _bloc.add(GetDetectedLanguageEvent(inputText: inputText));
+    if (inputText.trim().isEmpty) {
+      _result = '';
+    } else {
+      if (_selectedLanguageFromValue == 0) {
+        if (inputText.length < 10) {
+          // detect language and do the translation
+          _bloc.add(GetDetectedLanguageEvent(inputText: inputText));
+        } else {
+          // language is already detected - translate the text
+          _bloc.add(TranslateTextEvent(
+              inputText: inputText,
+              sourceLanguage: _detectedLanguage,
+              targetLanguage: widget.languages
+                  .elementAt(_selectedLanguageToValue + 1)
+                  .languageCode));
+        }
       } else {
-        // language is already detected - translate the text
         _bloc.add(TranslateTextEvent(
             inputText: inputText,
-            sourceLanguage: _detectedLanguage,
+            sourceLanguage: widget.languages
+                .elementAt(_selectedLanguageFromValue)
+                .languageCode,
             targetLanguage: widget.languages
                 .elementAt(_selectedLanguageToValue + 1)
                 .languageCode));
       }
-    } else {
-      _bloc.add(TranslateTextEvent(
-          inputText: inputText,
-          sourceLanguage: widget.languages
-              .elementAt(_selectedLanguageFromValue)
-              .languageCode,
-          targetLanguage: widget.languages
-              .elementAt(_selectedLanguageToValue + 1)
-              .languageCode));
     }
   }
 }
