@@ -57,7 +57,7 @@ class TranslateBloc extends Bloc<TranslateEvent, TranslateState> {
     final languageTo = sharedPreferences.get(SharedPreferencesKeys.LANGUAGE_TO);
     if (languageFrom == null || languageTo == null) {
       // not yet initialise
-      yield LanguageSetState(languageFrom: 0, languageTo: 1);
+      yield LanguageSetState(languageFrom: 0, languageTo: 21);
     } else {
       yield LanguageSetState(
         languageFrom:

@@ -327,29 +327,41 @@ class _TranslatePageState extends State<TranslatePage> {
     if (inputText.trim().isEmpty) {
       _result = '';
     } else {
-      if (_selectedLanguageFromValue == 0) {
-        if (inputText.length < 10) {
-          // detect language and do the translation
-          _bloc.add(GetDetectedLanguageEvent(inputText: inputText));
+      if ((inputText.endsWith(' ') && !inputText.endsWith('  ')) ||
+          !_isLetter(inputText.codeUnitAt(inputText.length - 1))) {
+        if (_selectedLanguageFromValue == 0) {
+          if (inputText.length < 10) {
+            // detect language and do the translation
+            _bloc.add(GetDetectedLanguageEvent(inputText: inputText));
+          } else {
+            // language is already detected - translate the text
+            _bloc.add(TranslateTextEvent(
+                inputText: inputText,
+                sourceLanguage: _detectedLanguage,
+                targetLanguage: widget.languages
+                    .elementAt(_selectedLanguageToValue + 1)
+                    .languageCode));
+          }
         } else {
-          // language is already detected - translate the text
           _bloc.add(TranslateTextEvent(
               inputText: inputText,
-              sourceLanguage: _detectedLanguage,
+              sourceLanguage: widget.languages
+                  .elementAt(_selectedLanguageFromValue)
+                  .languageCode,
               targetLanguage: widget.languages
                   .elementAt(_selectedLanguageToValue + 1)
                   .languageCode));
         }
-      } else {
-        _bloc.add(TranslateTextEvent(
-            inputText: inputText,
-            sourceLanguage: widget.languages
-                .elementAt(_selectedLanguageFromValue)
-                .languageCode,
-            targetLanguage: widget.languages
-                .elementAt(_selectedLanguageToValue + 1)
-                .languageCode));
       }
     }
+  }
+
+  _isLetter(int input) {
+    final a = 'a'.codeUnitAt(0);
+    final z = 'z'.codeUnitAt(0);
+    final aa = 'A'.codeUnitAt(0);
+    final zz = 'Z'.codeUnitAt(0);
+
+    return (a <= input && input <= z) || (aa <= input && input <= zz);
   }
 }
